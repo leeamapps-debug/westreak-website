@@ -1,0 +1,620 @@
+#!/usr/bin/env python3
+"""Static checks for the WeStreak website (westreakapp.com).
+
+Run from anywhere:  python3 scripts/check-site
+Exits 0 when every check passes, 1 otherwise. Prints one line per check.
+Only the Python standard library is used.
+"""
+import json
+import os
+import re
+import sys
+from html.parser import HTMLParser
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SITE = "https://westreakapp.com"
+TBC = "to be confirmed before WeStreak launches"
+
+PAGES = {
+    "index.html": {
+        "path": "/",
+        "title": "WeStreak: Couples Habit Tracker with One Shared Streak",
+        "description": "WeStreak is a habit tracker for two. Share one grid and one streak with your partner or a friend, nudge each other, and pay once for both of you.",
+    },
+    "support.html": {
+        "path": "/support",
+        "title": "WeStreak Support: Help, Subscriptions and Accessibility",
+        "description": "Get help with WeStreak, cancel or restore a subscription, report a problem with a partner, and read our accessibility commitment.",
+    },
+    "privacy.html": {
+        "path": "/privacy",
+        "title": "WeStreak Privacy Policy",
+        "description": "What information WeStreak handles, why, who helps us, how long we keep it, and how to use your rights.",
+    },
+    "terms.html": {
+        "path": "/terms",
+        "title": "WeStreak Terms of Use",
+        "description": "The agreement for using WeStreak: who can use it, Free and Premium, how one plan covers two people, the free week, cancelling and your rights.",
+    },
+    "delete-account.html": {
+        "path": "/delete-account",
+        "title": "Delete Your WeStreak Account",
+        "description": "How to delete your WeStreak account in the app or by email, what we delete, what we keep and for how long.",
+    },
+    "404.html": {
+        "path": "/404",
+        "title": "Page Not Found, WeStreak",
+        # Not in the copy file: the 404 page has no search description there.
+        "description": "The page you were looking for isn't on westreakapp.com. Go to the WeStreak home page or get help on the support page.",
+        "noindex": True,
+    },
+}
+
+SITEMAP_PATHS = ["/", "/support", "/privacy", "/terms", "/delete-account"]
+
+FAQ = [
+    ("Do we both need to pay?",
+     "No. One Premium plan covers you and your partner. Only the person who subscribes is charged."),
+    ("Can we use WeStreak for free?",
+     "Yes. You can track up to three habits on your own and pair with someone for free. Premium opens the shared side."),
+    ("What does my partner see?",
+     "With Premium, your partner sees your first name, the habits you share with them and your ticks on those habits. Habits you keep just for yourself stay private."),
+    ("Is WeStreak only for couples?",
+     "No. It is for any two people: partners, friends, family or gym buddies. You pair with one person at a time."),
+    ("What if one of us misses a day?",
+     "A streak save covers a day when only one of you finished. You earn one every 14 days in a row together, up to three. For a holiday or illness, take a break instead."),
+    ("What happens if we stop paying?",
+     "Your shared streak is frozen and kept for 30 days. Start Premium again within 30 days and it carries on where it stopped."),
+    ("How do I cancel?",
+     "On iPhone, open Settings, tap your name, then Subscriptions. On Android, open Google Play, then Payments and subscriptions. The Manage subscription button in WeStreak's Settings takes you there."),
+    ("Does WeStreak work on Android?",
+     "WeStreak is launching on iPhone first, with Android following soon after."),
+    ("Does WeStreak work with VoiceOver?",
+     "Yes. WeStreak was built and tested with VoiceOver by a founder who uses it every day."),
+]
+
+FORBIDDEN_PHRASES = [
+    "30 days of history",
+    "westreak.app/",
+    "available on Google Play",
+    "Download on the App Store",
+]
+
+EXTERNAL_HINTS = ["fonts.googleapis", "fonts.gstatic", "googletagmanager", "google-analytics",
+                  "cdn.", "unpkg.com", "jsdelivr", "cdnjs", "plausible", "posthog", "sentry",
+                  "hotjar", "facebook.net", "doubleclick"]
+
+# Colour pairs to check, read from the CSS custom properties. (name, foreground var, background var, minimum ratio)
+CONTRAST_PAIRS = [
+    ("text on background", "--text", "--background", 4.5),
+    ("text on cards", "--text", "--surface", 4.5),
+    ("secondary text on background", "--text-muted", "--background", 4.5),
+    ("secondary text on cards", "--text-muted", "--surface", 4.5),
+    ("links on background", "--link", "--background", 4.5),
+    ("links on cards", "--link", "--surface", 4.5),
+    ("button text on button colour", "--on-primary", "--primary", 4.5),
+    ("apricot text on background", "--you-text", "--background", 4.5),
+    ("apricot text on cards", "--you-text", "--surface", 4.5),
+    ("outlines on background", "--outline", "--background", 3.0),
+    ("outlines on cards", "--outline", "--surface", 3.0),
+]
+
+results = []  # (ok, label, detail)
+
+
+def check(ok, label, detail=""):
+    results.append((bool(ok), label, detail))
+
+
+def read(rel):
+    p = os.path.join(ROOT, rel)
+    with open(p, encoding="utf-8") as f:
+        return f.read()
+
+
+VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+
+
+class Node:
+    def __init__(self, tag, attrs, parent):
+        self.tag = tag
+        self.attrs = dict(attrs)
+        self.parent = parent
+        self.children = []
+        self.text_parts = []
+
+    def text(self):
+        out = []
+        for c in self.children:
+            if isinstance(c, str):
+                out.append(c)
+            else:
+                if c.tag in ("script", "style", "template"):
+                    continue
+                out.append(c.text())
+        return "".join(out)
+
+    def walk(self):
+        yield self
+        for c in self.children:
+            if not isinstance(c, str):
+                for n in c.walk():
+                    yield n
+
+    def is_hidden(self):
+        n = self
+        while n is not None:
+            if "hidden" in n.attrs:
+                return True
+            n = n.parent
+        return False
+
+    def find_all(self, tag):
+        return [n for n in self.walk() if n.tag == tag]
+
+
+class Parser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.root = Node("document", [], None)
+        self.cur = self.root
+        self.lang = None
+        self.comments = []
+
+    def handle_starttag(self, tag, attrs):
+        node = Node(tag, attrs, self.cur)
+        self.cur.children.append(node)
+        if tag == "html":
+            self.lang = node.attrs.get("lang")
+        if tag not in VOID:
+            self.cur = node
+
+    def handle_startendtag(self, tag, attrs):
+        node = Node(tag, attrs, self.cur)
+        self.cur.children.append(node)
+
+    def handle_endtag(self, tag):
+        n = self.cur
+        while n is not None and n.tag != tag:
+            n = n.parent
+        if n is not None and n.parent is not None:
+            self.cur = n.parent
+
+    def handle_data(self, data):
+        self.cur.children.append(data)
+
+    def handle_comment(self, data):
+        self.comments.append(data)
+
+
+def parse(html):
+    p = Parser()
+    p.feed(html)
+    return p
+
+
+def norm(s):
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def visible_text(root):
+    parts = []
+    for n in root.walk():
+        if n.tag in ("script", "style", "template", "head", "title"):
+            continue
+        for c in n.children:
+            if isinstance(c, str):
+                parts.append(c)
+    return "".join(parts)
+
+
+def body_text_nodes(root):
+    """Text that would be shown or read, excluding head, script, style."""
+    out = []
+    head = root.find_all("head")
+    for n in root.walk():
+        if n.tag in ("script", "style", "template", "head", "title"):
+            continue
+        if any(h is n or _is_ancestor(h, n) for h in head):
+            continue
+        for c in n.children:
+            if isinstance(c, str):
+                out.append((n, c))
+    return out
+
+
+def _is_ancestor(a, n):
+    p = n.parent
+    while p is not None:
+        if p is a:
+            return True
+        p = p.parent
+    return False
+
+
+def resolve_internal(href, from_file):
+    """Return the local file an href would be served from on GitHub Pages, or None."""
+    href = href.split("?")[0]
+    if href.startswith("#"):
+        return from_file
+    if href.startswith("/"):
+        rel = href[1:]
+    else:
+        rel = href
+    rel = rel.split("#")[0]
+    if rel == "":
+        return "index.html"
+    cands = [rel, rel + ".html", os.path.join(rel, "index.html")]
+    for c in cands:
+        if os.path.isfile(os.path.join(ROOT, c)):
+            return c
+    return None
+
+
+# ---------- colour maths ----------
+
+def hex_to_rgb(h):
+    h = h.strip().lstrip("#")
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def luminance(rgb):
+    def lin(c):
+        c = c / 255.0
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = (lin(c) for c in rgb)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast(fg, bg):
+    l1, l2 = luminance(hex_to_rgb(fg)), luminance(hex_to_rgb(bg))
+    hi, lo = max(l1, l2), min(l1, l2)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def css_vars(css, dark):
+    """Pull --name: #hex pairs from :root (light) or the prefers-color-scheme dark block."""
+    if dark:
+        m = re.search(r"@media\s*\(prefers-color-scheme:\s*dark\)\s*\{(.*?)\n\}", css, re.S)
+        block = m.group(1) if m else ""
+    else:
+        m = re.search(r":root\s*\{(.*?)\}", css, re.S)
+        block = m.group(1) if m else ""
+    return dict(re.findall(r"(--[a-z0-9-]+)\s*:\s*(#[0-9A-Fa-f]{6})\s*;", block))
+
+
+# ---------- the checks ----------
+
+def main():
+    html_files = sorted(f for f in os.listdir(ROOT) if f.endswith(".html")) if os.path.isdir(ROOT) else []
+    check(set(html_files) == set(PAGES), "the six HTML pages exist and no others",
+          "found: " + ", ".join(html_files))
+
+    titles, descs = [], []
+    all_text_for_phrases = []
+    parsed = {}
+
+    for fname, exp in PAGES.items():
+        label = fname
+        path = os.path.join(ROOT, fname)
+        if not os.path.isfile(path):
+            check(False, label + ": page exists")
+            continue
+        html = read(fname)
+        p = parse(html)
+        parsed[fname] = p
+        root = p.root
+        all_text_for_phrases.append((fname, html))
+
+        check(p.lang == "en-GB", label + ": html lang is en-GB", str(p.lang))
+
+        title_nodes = root.find_all("title")
+        title = norm(title_nodes[0].text()) if title_nodes else ""
+        check(title == exp["title"], label + ": title matches the copy file", repr(title))
+        titles.append(title)
+
+        metas = root.find_all("meta")
+        links = root.find_all("link")
+
+        def meta(name, key="name"):
+            for m in metas:
+                if m.attrs.get(key) == name:
+                    return m.attrs.get("content", "")
+            return None
+
+        desc = meta("description")
+        check(desc == exp["description"], label + ": meta description matches", repr(desc))
+        descs.append(desc)
+
+        canon = [l.attrs.get("href") for l in links if l.attrs.get("rel") == "canonical"]
+        want_canon = SITE + exp["path"]
+        check(canon == [want_canon], label + ": canonical link is " + want_canon, str(canon))
+
+        og = {k: meta(k, "property") for k in ("og:title", "og:description", "og:url", "og:image", "og:type", "og:site_name")}
+        check(og["og:title"] == exp["title"] and og["og:description"] == exp["description"]
+              and og["og:url"] == want_canon and og["og:image"] == SITE + "/images/og-image.png"
+              and og["og:type"] == "website" and og["og:site_name"] == "WeStreak",
+              label + ": Open Graph tags present and matching", json.dumps(og))
+        tw = {k: meta(k) for k in ("twitter:card", "twitter:title", "twitter:description", "twitter:image")}
+        check(tw["twitter:card"] in ("summary", "summary_large_image") and tw["twitter:title"] == exp["title"]
+              and tw["twitter:description"] == exp["description"] and tw["twitter:image"] == SITE + "/images/og-image.png",
+              label + ": Twitter card tags present and matching", json.dumps(tw))
+
+        robots = meta("robots")
+        if exp.get("noindex"):
+            check(robots is not None and "noindex" in robots, label + ": robots noindex present", str(robots))
+        else:
+            check(robots is None or "noindex" not in robots, label + ": page is indexable", str(robots))
+
+        icons = [l for l in links if "icon" in (l.attrs.get("rel") or "")]
+        check(len(icons) >= 2, label + ": favicon links present", str(len(icons)))
+
+        # headings
+        heads = [n for n in root.walk() if re.fullmatch(r"h[1-6]", n.tag) and not n.is_hidden()]
+        h1s = [h for h in heads if h.tag == "h1"]
+        check(len(h1s) == 1, label + ": exactly one h1 (not counting hidden content)", str(len(h1s)))
+        skip = []
+        prev = 0
+        for h in heads:
+            lvl = int(h.tag[1])
+            if lvl > prev + 1:
+                skip.append("%s after h%d: %s" % (h.tag, prev, norm(h.text())[:40]))
+            prev = lvl
+        check(not skip, label + ": headings never skip a level", "; ".join(skip))
+
+        # skip link and landmarks
+        anchors = root.find_all("a")
+        skiplink = [a for a in anchors if a.attrs.get("href", "").startswith("#")]
+        main_ids = [n.attrs.get("id") for n in root.find_all("main")]
+        check(any(a.attrs.get("href") == "#" + (main_ids[0] if main_ids else "main") for a in skiplink)
+              and anchors and anchors[0].attrs.get("href", "").startswith("#"),
+              label + ": skip link to main content is the first link")
+        for lm in ("header", "nav", "main", "footer"):
+            check(len(root.find_all(lm)) >= 1, label + ": has a " + lm + " landmark")
+        check(len(root.find_all("main")) == 1, label + ": exactly one main")
+
+        # images
+        bad_img = [i.attrs.get("src") for i in root.find_all("img") if "alt" not in i.attrs]
+        check(not bad_img, label + ": every img has an alt attribute", str(bad_img))
+
+        # links readable
+        unreadable = []
+        for a in anchors:
+            txt = norm(a.text())
+            if not txt and not a.attrs.get("aria-label"):
+                imgs = a.find_all("img")
+                if not any(norm(i.attrs.get("alt", "")) for i in imgs):
+                    unreadable.append(a.attrs.get("href"))
+        check(not unreadable, label + ": every link has readable text or an aria-label", str(unreadable))
+        empty_buttons = [b for b in root.find_all("button") if not norm(b.text()) and not b.attrs.get("aria-label")]
+        check(not empty_buttons, label + ": no empty buttons")
+
+        # internal links resolve
+        broken = []
+        for n in root.walk():
+            for key in ("href", "src"):
+                v = n.attrs.get(key)
+                if not v or n.tag == "a" and key == "src":
+                    continue
+                if v.startswith("mailto:") or v.startswith("tel:"):
+                    continue
+                if re.match(r"https?://", v):
+                    if v.startswith(SITE + "/") or v == SITE:
+                        v = v[len(SITE):] or "/"
+                    else:
+                        continue
+                if v.startswith("//"):
+                    broken.append(v)
+                    continue
+                target = resolve_internal(v, fname)
+                if target is None:
+                    broken.append(v)
+                    continue
+                if "#" in v:
+                    frag = v.split("#", 1)[1]
+                    if frag:
+                        troot = parsed[target].root if target in parsed else parse(read(target)).root
+                        ids = {x.attrs.get("id") for x in troot.walk()}
+                        if frag not in ids:
+                            broken.append(v + " (no id)")
+        check(not broken, label + ": every internal link resolves as GitHub Pages would", str(broken))
+
+        # external requests
+        ext = []
+        for n in root.walk():
+            if n.tag in ("script", "link", "img", "iframe", "source", "video", "audio", "object", "embed"):
+                for key in ("src", "href"):
+                    v = n.attrs.get(key, "")
+                    if re.match(r"(https?:)?//", v) and not v.startswith(SITE):
+                        ext.append(n.tag + " " + v)
+            if n.tag == "link" and n.attrs.get("rel") in ("preconnect", "dns-prefetch", "prefetch", "preload") \
+                    and re.match(r"(https?:)?//", n.attrs.get("href", "")):
+                ext.append("link " + n.attrs.get("href", ""))
+        url_attrs = " ".join(n.attrs.get(k, "") for n in root.walk() for k in ("src", "href", "action", "content"))
+        for hint in EXTERNAL_HINTS:
+            if hint in url_attrs.lower():
+                ext.append("attribute mentions " + hint)
+        inline_js = "".join(s.text() for s in root.find_all("script") if "src" not in s.attrs)
+        if "document.cookie" in inline_js or "fetch(" in inline_js or "XMLHttpRequest" in inline_js:
+            ext.append("inline script uses cookies or network")
+        check(not ext, label + ": no external requests, trackers or cookies", "; ".join(ext))
+
+        # square brackets and tbc spans
+        brackets = []
+        tbc_outside = []
+        for node, txt in body_text_nodes(root):
+            if "[" in txt or "]" in txt:
+                brackets.append(norm(txt)[:60])
+            if TBC in txt:
+                n = node
+                ok = False
+                while n is not None:
+                    if n.tag == "span" and "tbc" in (n.attrs.get("class") or "").split():
+                        ok = True
+                        break
+                    n = n.parent
+                if not ok:
+                    tbc_outside.append(norm(txt)[:60])
+        check(not brackets, label + ": no square brackets in visible text", "; ".join(brackets))
+        check(not tbc_outside, label + ": every gap sits in a span with class tbc", "; ".join(tbc_outside))
+
+        # JSON-LD
+        ld_blocks = [s for s in root.find_all("script") if s.attrs.get("type") == "application/ld+json"]
+        ld_ok = True
+        ld_data = []
+        for s in ld_blocks:
+            try:
+                ld_data.append(json.loads(s.text()))
+            except json.JSONDecodeError as e:
+                ld_ok = False
+                check(False, label + ": JSON-LD parses", str(e))
+        if ld_blocks and ld_ok:
+            check(True, label + ": all %d JSON-LD blocks parse" % len(ld_blocks))
+        if fname == "index.html":
+            items = []
+            for d in ld_data:
+                items.extend(d.get("@graph", [d]) if isinstance(d, dict) else [])
+            types = {i.get("@type") for i in items}
+            check({"MobileApplication", "Organization", "WebSite", "FAQPage"} <= types,
+                  label + ": JSON-LD has MobileApplication, Organization, WebSite and FAQPage", str(types))
+            faq = [i for i in items if i.get("@type") == "FAQPage"]
+            got = []
+            if faq:
+                for q in faq[0].get("mainEntity", []):
+                    got.append((q.get("name"), (q.get("acceptedAnswer") or {}).get("text")))
+            check(got == FAQ, label + ": FAQPage questions and answers match the copy file word for word",
+                  "got %d entries" % len(got))
+            # and the visible Questions text
+            vis = norm(visible_text(root))
+            missing = [q for q, a in FAQ if q not in vis or a not in vis]
+            check(not missing, label + ": visible Questions text matches the copy file", str(missing))
+            app = [i for i in items if i.get("@type") == "MobileApplication"]
+            bad = []
+            if app:
+                a = app[0]
+                if a.get("name") != "WeStreak: Habit Tracker for 2": bad.append("name")
+                if a.get("operatingSystem") != "iOS": bad.append("operatingSystem")
+                if a.get("applicationCategory") != "HealthApplication": bad.append("applicationCategory")
+                if a.get("url") != SITE + "/": bad.append("url")
+                off = a.get("offers") or {}
+                if not (str(off.get("price")) in ("0", "0.00") and off.get("priceCurrency") == "GBP"): bad.append("offers")
+                if "aggregateRating" in a or "review" in a: bad.append("ratings present")
+            else:
+                bad.append("missing")
+            check(not bad, label + ": MobileApplication fields as specified", str(bad))
+
+    check(len(titles) == len(set(titles)), "titles are unique across pages")
+    check(len(descs) == len(set(descs)), "meta descriptions are unique across pages")
+
+    # forbidden phrases across site text files
+    text_files = list(all_text_for_phrases)
+    for extra in ("llms.txt", "styles.css", "robots.txt", "sitemap.xml"):
+        if os.path.isfile(os.path.join(ROOT, extra)):
+            text_files.append((extra, read(extra)))
+    hits = []
+    for fname, content in text_files:
+        for ph in FORBIDDEN_PHRASES:
+            if ph.lower() in content.lower():
+                hits.append(fname + ": " + ph)
+    check(not hits, "none of the forbidden phrases appear anywhere", "; ".join(hits))
+
+    # llms.txt
+    if os.path.isfile(os.path.join(ROOT, "llms.txt")):
+        llms = read("llms.txt")
+        check("[" not in llms and "]" not in llms, "llms.txt has no square brackets")
+        check(llms.startswith("WeStreak: Habit Tracker for 2"), "llms.txt starts with the app name")
+    else:
+        check(False, "llms.txt exists")
+
+    # sitemap and robots
+    if os.path.isfile(os.path.join(ROOT, "sitemap.xml")):
+        sm = read("sitemap.xml")
+        locs = re.findall(r"<loc>(.*?)</loc>", sm)
+        want = [SITE + p for p in SITEMAP_PATHS]
+        check(locs == want, "sitemap.xml lists exactly the five pages at their extensionless addresses", str(locs))
+        check(re.search(r"<lastmod>\d{4}-\d{2}-\d{2}</lastmod>", sm) is not None, "sitemap.xml has lastmod dates")
+    else:
+        check(False, "sitemap.xml exists")
+    if os.path.isfile(os.path.join(ROOT, "robots.txt")):
+        rb = read("robots.txt")
+        check("Sitemap: " + SITE + "/sitemap.xml" in rb, "robots.txt points at the sitemap")
+        check(re.search(r"User-agent:\s*\*\s*\n\s*Allow:\s*/", rb) is not None and "Disallow: /" not in rb.replace("Disallow: /checks", "").replace("Disallow: /scripts", ""),
+              "robots.txt allows all crawlers")
+    else:
+        check(False, "robots.txt exists")
+
+    # AASA
+    aasa_path = os.path.join(ROOT, ".well-known", "apple-app-site-association")
+    if os.path.isfile(aasa_path):
+        raw = read(".well-known/apple-app-site-association")
+        try:
+            aasa = json.loads(raw)
+            details = aasa["applinks"]["details"]
+            ok = any(d.get("appID") == "5C6576QDL8.com.westreak.app" and "/invite/*" in d.get("paths", []) for d in details)
+            check(ok, "apple-app-site-association has the appID and the /invite/* path")
+            check("TEAMID" not in raw, "apple-app-site-association does not contain TEAMID")
+        except (ValueError, KeyError) as e:
+            check(False, "apple-app-site-association parses as JSON", str(e))
+    else:
+        check(False, ".well-known/apple-app-site-association exists")
+    check(not os.path.exists(aasa_path + ".json"), "no apple-app-site-association.json")
+
+    # CNAME, _config.yml, manifest
+    if os.path.isfile(os.path.join(ROOT, "CNAME")):
+        check(read("CNAME").strip() == "westreakapp.com" and read("CNAME").count("\n") <= 1, "CNAME contains exactly westreakapp.com")
+    else:
+        check(False, "CNAME exists")
+    if os.path.isfile(os.path.join(ROOT, "_config.yml")):
+        cfg = read("_config.yml")
+        check(re.search(r"include:\s*\n\s*-\s*\.well-known", cfg) is not None, "_config.yml includes .well-known")
+        check(all(x in cfg for x in ("- checks", "- scripts", "- .gitignore")), "_config.yml excludes checks, scripts and .gitignore")
+    else:
+        check(False, "_config.yml exists")
+    check(not os.path.exists(os.path.join(ROOT, ".nojekyll")), "no .nojekyll file (Jekyll must run for the exclude list)")
+    check(os.path.isfile(os.path.join(ROOT, "site.webmanifest")), "site.webmanifest exists")
+
+    # CSS: fonts local, no external urls, contrast
+    if os.path.isfile(os.path.join(ROOT, "styles.css")):
+        css = read("styles.css")
+        urls = re.findall(r"url\(\s*['\"]?([^'\")]+)['\"]?\s*\)", css)
+        ext = [u for u in urls if re.match(r"(https?:)?//", u)]
+        check(not ext and "@import" not in css, "styles.css loads nothing from another domain", str(ext))
+        missing = [u for u in urls if not re.match(r"(https?:)?//", u) and resolve_internal(u, "styles.css") is None]
+        check(not missing, "every file styles.css refers to exists", str(missing))
+        check("font-display: swap" in css or "font-display:swap" in css, "fonts use font-display swap")
+        check("color-scheme: light dark" in css or "color-scheme:light dark" in css, "color-scheme is light dark")
+        check("prefers-reduced-motion" in css, "styles.css respects prefers-reduced-motion")
+        for mode in ("light", "dark"):
+            v = css_vars(css, mode == "dark")
+            for name, fg, bg, minimum in CONTRAST_PAIRS:
+                if fg in v and bg in v:
+                    r = contrast(v[fg], v[bg])
+                    check(r >= minimum, "%s, %s: %s on %s is %.2f to 1 (needs %.1f)" % (mode, name, v[fg], v[bg], r, minimum))
+                else:
+                    check(False, "%s, %s: variables %s and %s defined" % (mode, name, fg, bg))
+    else:
+        check(False, "styles.css exists")
+
+    fonts_dir = os.path.join(ROOT, "fonts")
+    if os.path.isdir(fonts_dir):
+        files = os.listdir(fonts_dir)
+        check(any(f.endswith(".woff2") for f in files) and any("OFL" in f for f in files),
+              "fonts folder holds woff2 files and OFL licence files", ", ".join(sorted(files)))
+    else:
+        check(False, "fonts folder exists")
+
+    # report
+    failed = [r for r in results if not r[0]]
+    for ok, label, detail in results:
+        line = ("PASS  " if ok else "FAIL  ") + label
+        if detail and not ok:
+            line += "  |  " + detail
+        print(line)
+    print()
+    print("%d checks, %d passed, %d failed" % (len(results), len(results) - len(failed), len(failed)))
+    print("RESULT: " + ("PASS" if not failed else "FAIL"))
+    return 0 if not failed else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

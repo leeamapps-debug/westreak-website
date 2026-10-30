@@ -1,0 +1,11 @@
+# GitHub Pages builds this site with Jekyll. Jekyll skips folders whose names start with a dot unless they are listed under include.
+include:
+  - .well-known
+exclude:
+  - checks
+  - scripts
+  - .gitignore
+  - .pytools
+  - node_modules
+  - package.json
+  - package-lock.json

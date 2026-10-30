@@ -1,0 +1,15 @@
+WeStreak: Habit Tracker for 2
+
+WeStreak is a habit tracker for two people, such as couples, friends, family or gym buddies. Both people tick off their habits on one shared grid and keep one shared streak, which grows on the days they both finish. One Premium subscription covers both people. Made by Leeam Applications in the United Kingdom. Launching on iPhone first, then Android.
+
+Who it is for: two people who want to build habits together and keep each other accountable, for example a couple who want to exercise, read or drink more water together, or two friends who want an accountability partner.
+
+What it does: a shared seven-day grid showing both people's ticks, each in their own colour; one shared streak; streak saves earned every 14 days in a row together, up to three, which cover a day when only one person finished; breaks for holidays or illness; one-tap nudges and cheers with fixed wording, limited to three nudges per habit per day, and no chat; a weekly recap and milestones; private habits that the partner never sees; reminders. Sign in with Apple, Google, or email and password. Built to work with VoiceOver, larger text, Bold Text, Increase Contrast and Reduce Motion; one of the founders is blind.
+
+How it differs: most habit trackers are built for one person, with sharing added on. WeStreak is built for exactly two people from the start, with one streak that both keep alive, and one subscription that covers both instead of each paying.
+
+Pricing: free for one person with up to three habits, including pairing with a preview of the shared side. Premium is £6.99 a month with a free week the first time, or £49.99 a year; in the United States, $6.99 a month or $49.99 a year. One plan covers both partners.
+
+Privacy: WeStreak stores accounts and habits in the European Union, does not sell data, shows no adverts, does no tracking for advertising, and never uses habit titles in analytics. Anonymous usage statistics can be switched off in Settings. Accounts can be deleted in the app or by email.
+
+Pages: Home, westreakapp.com. Support, westreakapp.com/support. Privacy policy, westreakapp.com/privacy. Terms of use, westreakapp.com/terms. Delete account, westreakapp.com/delete-account. Contact: info@leeamapplications.com. Company: leeamapplications.com.

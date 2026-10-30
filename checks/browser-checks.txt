@@ -1,0 +1,278 @@
+SHOT  home-375-light.png (status 200)
+PASS  home at 375 light: no sideways scrolling
+SHOT  home-1280-light.png (status 200)
+PASS  home at 1280 light: no sideways scrolling
+SHOT  home-375-dark.png (status 200)
+PASS  home at 375 dark: no sideways scrolling
+SHOT  home-1280-dark.png (status 200)
+PASS  home at 1280 dark: no sideways scrolling
+PASS  home at 320: no sideways scrolling
+PASS  home: axe-core finds no violations (39 rules passed, 0 needing manual review: none)
+TREE  home
+  [header]
+      - banner:
+        - link "WeStreak":
+          - /url: /
+        - navigation "Main":
+          - list:
+            - listitem:
+              - link "Home":
+                - /url: /
+            - listitem:
+              - link "Support":
+                - /url: /support
+  [hero]
+      - 'region "Habit tracker for couples and friends: one grid, one shared streak"':
+        - 'heading "Habit tracker for couples and friends: one grid, one shared streak" [level=1]'
+        - paragraph: WeStreak is a habit tracker for two people. You and your partner, or a friend, tick off your habits on one shared grid and keep one streak going together. One plan covers you both.
+        - list:
+          - listitem: Coming soon to the App Store.
+          - listitem: Coming soon to Google Play.
+  [pricing]
+      - region "Pricing":
+        - heading "Pricing" [level=2]
+        - list:
+          - listitem:
+            - heading "Free." [level=3]
+            - paragraph: Track up to three habits on your own. You can pair for free too, and see your shared side as a preview.
+          - listitem:
+            - heading "Premium." [level=3]
+            - paragraph: £6.99 a month, with a free week the first time, or £49.99 a year. In the United States, $6.99 a month or $49.99 a year. One plan covers you and your partner, so only one of you pays. Premium opens the shared grid and streak, saves, breaks, nudges and cheers, the weekly recap and milestones, more habits, and six more grid colours.
+        - paragraph: Cancel any time in your App Store or Google Play settings.
+  [first question]
+      - heading "Do we both need to pay?" [level=3]
+      - paragraph: No. One Premium plan covers you and your partner. Only the person who subscribes is charged.
+SHOT  support-375-light.png (status 200)
+PASS  support at 375 light: no sideways scrolling
+SHOT  support-1280-light.png (status 200)
+PASS  support at 1280 light: no sideways scrolling
+SHOT  support-375-dark.png (status 200)
+PASS  support at 375 dark: no sideways scrolling
+SHOT  support-1280-dark.png (status 200)
+PASS  support at 1280 dark: no sideways scrolling
+PASS  support at 320: no sideways scrolling
+PASS  support: axe-core finds no violations (39 rules passed, 0 needing manual review: none)
+TREE  support
+  [header]
+      - banner:
+        - link "WeStreak":
+          - /url: /
+        - navigation "Main":
+          - list:
+            - listitem:
+              - link "Home":
+                - /url: /
+            - listitem:
+              - link "Support":
+                - /url: /support
+  [hero]
+      - region "Get help":
+        - heading "Get help" [level=2]
+        - paragraph:
+          - text: Email
+          - link "info@leeamapplications.com":
+            - /url: mailto:info@leeamapplications.com
+          - text: and tell us what happened, what phone you use, and which version of WeStreak you have, if you know. We aim to reply within 5 working days.
+SHOT  privacy-375-light.png (status 200)
+PASS  privacy at 375 light: no sideways scrolling
+SHOT  privacy-1280-light.png (status 200)
+PASS  privacy at 1280 light: no sideways scrolling
+SHOT  privacy-375-dark.png (status 200)
+PASS  privacy at 375 dark: no sideways scrolling
+SHOT  privacy-1280-dark.png (status 200)
+PASS  privacy at 1280 dark: no sideways scrolling
+PASS  privacy at 320: no sideways scrolling
+PASS  privacy: axe-core finds no violations (40 rules passed, 0 needing manual review: none)
+TREE  privacy
+  [header]
+      - banner:
+        - link "WeStreak":
+          - /url: /
+        - navigation "Main":
+          - list:
+            - listitem:
+              - link "Home":
+                - /url: /
+            - listitem:
+              - link "Support":
+                - /url: /support
+  [hero]
+      - region "The short version":
+        - heading "The short version" [level=2]
+        - paragraph: WeStreak lets two people share habits and a streak. To do that, we store your account, your habits and your daily ticks, and we show some of them to the one partner you choose to pair with. Our database is in Ireland, in the European Union. We do not sell your information, we do not show adverts, we do not track you across other apps or websites, and we never use your habit titles for analytics. You can switch off anonymous usage statistics in Settings, and you can delete your account and its data at any time from inside the app.
+SHOT  terms-375-light.png (status 200)
+PASS  terms at 375 light: no sideways scrolling
+SHOT  terms-1280-light.png (status 200)
+PASS  terms at 1280 light: no sideways scrolling
+SHOT  terms-375-dark.png (status 200)
+PASS  terms at 375 dark: no sideways scrolling
+SHOT  terms-1280-dark.png (status 200)
+PASS  terms at 1280 dark: no sideways scrolling
+PASS  terms at 320: no sideways scrolling
+PASS  terms: axe-core finds no violations (40 rules passed, 0 needing manual review: none)
+TREE  terms
+  [header]
+      - banner:
+        - link "WeStreak":
+          - /url: /
+        - navigation "Main":
+          - list:
+            - listitem:
+              - link "Home":
+                - /url: /
+            - listitem:
+              - link "Support":
+                - /url: /support
+  [hero]
+      - region "The key points":
+        - heading "The key points" [level=2]
+        - list:
+          - listitem: WeStreak is a habit tracker for two people who share a grid and a streak. You must be 18 or over.
+          - listitem: WeStreak is free for one person with up to three habits. Premium costs £6.99 a month, with a free week if you have not had one before, or £49.99 a year, or the price shown in the app in your currency.
+          - listitem: "One Premium plan covers two people: the person who pays and the partner they are paired with. Premium belongs to the person who pays."
+          - listitem: Subscriptions renew automatically until you cancel. You cancel in your App Store or Google Play settings, at least 24 hours before renewal or the end of a free week. Deleting your WeStreak account does not cancel a subscription.
+          - listitem: Payment and refunds are handled by Apple or Google. You have a legal right to cancel within 14 days, and your other legal rights are not affected by these terms.
+          - listitem: Your partner can see the habits you share, your ticks and your streak. Only add habits you are happy for them to read.
+          - listitem: WeStreak is not medical advice.
+SHOT  delete-account-375-light.png (status 200)
+PASS  delete-account at 375 light: no sideways scrolling
+SHOT  delete-account-1280-light.png (status 200)
+PASS  delete-account at 1280 light: no sideways scrolling
+SHOT  delete-account-375-dark.png (status 200)
+PASS  delete-account at 375 dark: no sideways scrolling
+SHOT  delete-account-1280-dark.png (status 200)
+PASS  delete-account at 1280 dark: no sideways scrolling
+PASS  delete-account at 320: no sideways scrolling
+PASS  delete-account: axe-core finds no violations (40 rules passed, 0 needing manual review: none)
+TREE  delete-account
+  [header]
+      - banner:
+        - link "WeStreak":
+          - /url: /
+        - navigation "Main":
+          - list:
+            - listitem:
+              - link "Home":
+                - /url: /
+            - listitem:
+              - link "Support":
+                - /url: /support
+  [hero]
+      - 'region "Before you start: cancel your subscription"':
+        - 'heading "Before you start: cancel your subscription" [level=2]'
+        - paragraph: Deleting your WeStreak account does not cancel an App Store or Google Play subscription. If you pay for Premium, cancel it first, or Apple or Google will keep charging you.
+        - paragraph:
+          - text: "On iPhone: open Settings, tap your name, then Subscriptions, then WeStreak, then Cancel Subscription. Or go to"
+          - link "apps.apple.com/account/subscriptions":
+            - /url: https://apps.apple.com/account/subscriptions
+          - text: .
+        - paragraph:
+          - text: "On Android: open the Google Play app, tap your profile picture, then Payments and subscriptions, then Subscriptions, then WeStreak, then Cancel subscription. Or go to"
+          - link "play.google.com/store/account/subscriptions":
+            - /url: https://play.google.com/store/account/subscriptions
+          - text: .
+        - paragraph:
+          - text: To ask for a refund, use Apple's Report a Problem page at
+          - link "reportaproblem.apple.com":
+            - /url: https://reportaproblem.apple.com
+          - text: ", or Google Play's refund request page."
+SHOT  not-found-375-light.png (status 404)
+PASS  not-found at 375 light: no sideways scrolling
+SHOT  not-found-1280-light.png (status 404)
+PASS  not-found at 1280 light: no sideways scrolling
+SHOT  not-found-375-dark.png (status 404)
+PASS  not-found at 375 dark: no sideways scrolling
+SHOT  not-found-1280-dark.png (status 404)
+PASS  not-found at 1280 dark: no sideways scrolling
+PASS  not-found at 320: no sideways scrolling
+PASS  not-found: axe-core finds no violations (38 rules passed, 0 needing manual review: none)
+TREE  not-found
+  [header]
+      - banner:
+        - link "WeStreak":
+          - /url: /
+        - navigation "Main":
+          - list:
+            - listitem:
+              - link "Home":
+                - /url: /
+            - listitem:
+              - link "Support":
+                - /url: /support
+  [hero]
+      - heading "We couldn't find that page" [level=1]
+      - paragraph:
+        - text: The page you were looking for isn't here. It may have moved, or the address may have a typo. Go to the
+        - link "WeStreak home page":
+          - /url: /
+        - text: ", or get help on the"
+        - link "support page":
+          - /url: /support
+        - text: .
+SHOT  invite-375-light.png (status 404)
+PASS  invite at 375 light: no sideways scrolling
+SHOT  invite-1280-light.png (status 404)
+PASS  invite at 1280 light: no sideways scrolling
+SHOT  invite-375-dark.png (status 404)
+PASS  invite at 375 dark: no sideways scrolling
+SHOT  invite-1280-dark.png (status 404)
+PASS  invite at 1280 dark: no sideways scrolling
+PASS  invite at 320: no sideways scrolling
+PASS  invite: axe-core finds no violations (40 rules passed, 0 needing manual review: none)
+TREE  invite
+  [header]
+      - banner:
+        - link "WeStreak":
+          - /url: /
+        - navigation "Main":
+          - list:
+            - listitem:
+              - link "Home":
+                - /url: /
+            - listitem:
+              - link "Support":
+                - /url: /support
+  [hero]
+      - heading "You've been invited to WeStreak" [level=1]
+      - paragraph: "Someone wants to build habits with you. WeStreak is a habit tracker for two: you share one grid and one streak, and one plan covers you both."
+      - list:
+        - listitem: Get WeStreak. Coming soon to the App Store and Google Play.
+        - listitem: Open WeStreak and tap I have an invite code or link.
+        - listitem: Paste this page's address, or type the six-character code your partner sent you.
+      - paragraph:
+        - button "Copy invite link"
+      - status
+      - paragraph: Invites last 14 days. If yours has run out, ask your partner to send a new one.
+SHOT  home-1280-zoom200-light.png
+PASS  home at 200 percent zoom: no sideways scrolling
+PASS  invite address is served by 404.html with status 404
+PASS  invite page title is You're Invited to WeStreak
+PASS  invite content is shown
+PASS  not-found content is hidden on the invite page
+PASS  invite heading reads You've been invited to WeStreak
+PASS  copy button announces Invite link copied.
+PASS  announcement sits in a polite live region
+PASS  clipboard holds the full page address
+PASS  /invite with no code also shows the invite content
+PASS  without JavaScript the not-found content shows
+PASS  /no-such-page returns status 404
+PASS  not-found title is Page Not Found, WeStreak
+PASS  not-found content shows and invite content is hidden
+TAB   home page keyboard order:
+      1. a "Skip to main content" href=#main focusRing=true size=200x51
+      2. a "WeStreak" href=/ focusRing=true size=151x48
+      3. a "Home" href=/ focusRing=true size=80x48
+      4. a "Support" href=/support focusRing=true size=97x48
+      5. a "Privacy policy" href=/privacy focusRing=true size=128x48
+      6. a "Terms of use" href=/terms focusRing=true size=121x48
+      7. a "Support" href=/support focusRing=true size=80x48
+      8. a "Delete account" href=/delete-account focusRing=true size=137x48
+      9. a "Leeam Applications" href=https://leeamapplications.com focusRing=true size=174x48
+      10. a "info@leeamapplications.com" href=mailto:info@leeamapplications.com focusRing=true size=248x48
+      11. body
+PASS  first Tab stop is the skip link
+PASS  every Tab stop shows a visible focus ring
+PASS  every link and button in the Tab order is at least 48 by 48
+PASS  no request left the local server (no fonts, trackers or CDNs)
+
+RESULT: PASS (0 failed)

@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "5C6576QDL8.com.westreak.app",
+        "paths": ["/invite/*"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+# All crawlers, including AI crawlers, are welcome.
+User-agent: *
+Allow: /
+
+Sitemap: https://westreakapp.com/sitemap.xml

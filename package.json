@@ -1,0 +1,14 @@
+{
+  "name": "westreak-website",
+  "private": true,
+  "description": "WeStreak website, westreakapp.com. Static HTML and CSS; the packages here are only for the local checks.",
+  "scripts": {
+    "check": "python3 scripts/check-site",
+    "serve": "node scripts/serve.mjs",
+    "browser-checks": "node scripts/browser-checks.mjs"
+  },
+  "devDependencies": {
+    "axe-core": "^4.14.0",
+    "playwright": "^1.64.1"
+  }
+}

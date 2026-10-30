@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page Not Found, WeStreak</title>
+<meta name="description" content="The page you were looking for isn't on westreakapp.com. Go to the WeStreak home page or get help on the support page.">
+<!-- Search engines are told not to list this page. It also carries the Invite page: GitHub Pages serves 404.html for /invite/ followed by a code. -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://westreakapp.com/404">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WeStreak">
+<meta property="og:locale" content="en_GB">
+<meta property="og:title" content="Page Not Found, WeStreak">
+<meta property="og:description" content="The page you were looking for isn't on westreakapp.com. Go to the WeStreak home page or get help on the support page.">
+<meta property="og:url" content="https://westreakapp.com/404">
+<meta property="og:image" content="https://westreakapp.com/images/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The WeStreak logo above the words Habit tracker for couples and friends: one grid, one shared streak">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Page Not Found, WeStreak">
+<meta name="twitter:description" content="The page you were looking for isn't on westreakapp.com. Go to the WeStreak home page or get help on the support page.">
+<meta name="twitter:image" content="https://westreakapp.com/images/og-image.png">
+<link rel="icon" href="/images/favicon.ico" sizes="any">
+<link rel="icon" href="/images/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/images/westreak-logo.svg" alt="" width="40" height="40">WeStreak</a>
+    <nav class="site-nav" aria-label="Main">
+      <ul role="list">
+        <li><a href="/">Home</a></li>
+        <li><a href="/support">Support</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap prose">
+
+    <!-- Invite content: shown by the script below only when the address is /invite or starts with /invite/. Hidden without JavaScript. -->
+    <div id="invite" hidden>
+      <h1 class="page-title">You've been invited to WeStreak</h1>
+      <p class="lede">Someone wants to build habits with you. WeStreak is a habit tracker for two: you share one grid and one streak, and one plan covers you both.</p>
+      <ol>
+        <li>Get WeStreak. Coming soon to the App Store and Google Play.<!-- Launch day: add the official App Store and Google Play badges here. The copy file's note: Store badges on launch day. --></li>
+        <li>Open WeStreak and tap I have an invite code or link.</li>
+        <li>Paste this page's address, or type the six-character code your partner sent you.</li>
+      </ol>
+      <!-- The button copies this page's address. When copied, the page says: Invite link copied. -->
+      <p><button type="button" class="button" id="copy-link">Copy invite link</button></p>
+      <p class="status" id="copy-status" role="status" aria-live="polite"></p>
+      <p>Invites last 14 days. If yours has run out, ask your partner to send a new one.</p>
+    </div>
+
+    <!-- Not-found content: shown for every other missing address, and whenever JavaScript is off. -->
+    <div id="not-found">
+      <h1 class="page-title">We couldn't find that page</h1>
+      <p class="lede">The page you were looking for isn't here. It may have moved, or the address may have a typo. Go to the <a href="/">WeStreak home page</a>, or get help on the <a href="/support">support page</a>.</p>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>WeStreak is made by Leeam Applications.</p>
+    <nav aria-label="Footer">
+      <ul role="list">
+        <li><a href="/privacy">Privacy policy</a></li>
+        <li><a href="/terms">Terms of use</a></li>
+        <li><a href="/support">Support</a></li>
+        <li><a href="/delete-account">Delete account</a></li>
+        <li><a href="https://leeamapplications.com">Leeam Applications</a></li>
+      </ul>
+    </nav>
+    <p>Contact: <a href="mailto:info@leeamapplications.com">info@leeamapplications.com</a></p>
+    <p class="small">Copyright 2026 Leeam Applications.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var path = window.location.pathname;
+  if (path !== "/invite" && path.indexOf("/invite/") !== 0) { return; }
+  document.title = "You're Invited to WeStreak";
+  document.getElementById("not-found").hidden = true;
+  document.getElementById("invite").hidden = false;
+  var button = document.getElementById("copy-link");
+  var status = document.getElementById("copy-status");
+  button.addEventListener("click", function () {
+    var address = window.location.href;
+    function copied() { status.textContent = "Invite link copied."; }
+    function notCopied() { status.textContent = "Could not copy. The invite link is " + address; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(address).then(copied, notCopied);
+    } else {
+      notCopied();
+    }
+  });
+})();
+</script>
+</body>
+</html>
