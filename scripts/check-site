@@ -559,6 +559,47 @@ def main():
         check(False, ".well-known/apple-app-site-association exists")
     check(not os.path.exists(aasa_path + ".json"), "no apple-app-site-association.json")
 
+    # Android App Links: Digital Asset Links file
+    ASSETLINKS_FINGERPRINTS = [
+        "55:CC:BE:9A:55:5E:32:48:21:C1:4A:C4:9A:65:78:95:CF:9F:07:15:42:26:0A:E0:C0:FE:4E:23:9A:D3:26:E4",  # Play app signing key
+        "8E:C6:C1:83:E0:B6:D0:AC:EE:BF:4A:E8:44:C5:C2:70:83:55:A5:CA:0F:93:09:C4:D8:DA:48:38:84:F4:A5:6D",  # EAS upload key
+    ]
+    al_path = os.path.join(ROOT, ".well-known", "assetlinks.json")
+    check(os.path.isfile(al_path), ".well-known/assetlinks.json exists")
+    wk = os.listdir(os.path.join(ROOT, ".well-known")) if os.path.isdir(os.path.join(ROOT, ".well-known")) else []
+    variants = [f for f in wk if f.startswith("assetlinks") and f != "assetlinks.json"]
+    check(not variants, "no other assetlinks variant beside assetlinks.json", str(variants))
+    statement = None
+    if os.path.isfile(al_path):
+        try:
+            al = json.loads(read(".well-known/assetlinks.json"))
+        except ValueError as e:
+            al = None
+            al_err = str(e)
+        else:
+            al_err = ""
+        ok = isinstance(al, list) and len(al) == 1 and isinstance(al[0], dict)
+        check(ok, "assetlinks.json parses as JSON and is a list with exactly one statement",
+              al_err or ("got " + type(al).__name__ + (" of length %d" % len(al) if isinstance(al, list) else "")))
+        if ok:
+            statement = al[0]
+    else:
+        check(False, "assetlinks.json parses as JSON and is a list with exactly one statement", "file missing")
+    target = statement.get("target") if isinstance(statement, dict) else None
+    target = target if isinstance(target, dict) else {}
+    relation = statement.get("relation") if isinstance(statement, dict) else None
+    check(relation == ["delegate_permission/common.handle_all_urls"],
+          "assetlinks.json relation is exactly delegate_permission/common.handle_all_urls", str(relation))
+    check(target.get("namespace") == "android_app", "assetlinks.json target.namespace is android_app", str(target.get("namespace")))
+    check(target.get("package_name") == "com.westreak.app", "assetlinks.json target.package_name is com.westreak.app", str(target.get("package_name")))
+    fps = target.get("sha256_cert_fingerprints")
+    fps = fps if isinstance(fps, list) else []
+    check(sorted(fps) == sorted(ASSETLINKS_FINGERPRINTS) and len(fps) == 2,
+          "assetlinks.json lists exactly the Play app signing key and the EAS upload key fingerprints", str(fps))
+    shape = re.compile(r"^[0-9A-F]{2}(:[0-9A-F]{2}){31}$")
+    bad_shape = [f for f in fps if not isinstance(f, str) or not shape.match(f)]
+    check(fps and not bad_shape, "every assetlinks.json fingerprint is 32 upper-case hex pairs joined by colons", str(bad_shape or "no fingerprints"))
+
     # CNAME, _config.yml, manifest
     if os.path.isfile(os.path.join(ROOT, "CNAME")):
         check(read("CNAME").strip() == "westreakapp.com" and read("CNAME").count("\n") <= 1, "CNAME contains exactly westreakapp.com")

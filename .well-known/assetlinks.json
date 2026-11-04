@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.westreak.app",
+      "sha256_cert_fingerprints": [
+        "55:CC:BE:9A:55:5E:32:48:21:C1:4A:C4:9A:65:78:95:CF:9F:07:15:42:26:0A:E0:C0:FE:4E:23:9A:D3:26:E4",
+        "8E:C6:C1:83:E0:B6:D0:AC:EE:BF:4A:E8:44:C5:C2:70:83:55:A5:CA:0F:93:09:C4:D8:DA:48:38:84:F4:A5:6D"
+      ]
+    }
+  }
+]
